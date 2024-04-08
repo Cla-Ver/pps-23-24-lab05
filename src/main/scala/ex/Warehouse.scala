@@ -1,6 +1,7 @@
 package ex
 
 import util.Optionals.Optional
+import util.Optionals.Optional.Just
 import util.Sequences.*
 trait Item:
   def code: Int
@@ -8,7 +9,7 @@ trait Item:
   def tags: Sequence[String]
 
 object Item:
-  def apply(code: Int, name: String, tags: Sequence[String] = Sequence.empty): Item = ???
+  def apply(code: Int, name: String, tags: Sequence[String] = Sequence.empty): Item = ItemImpl(code, name, tags)
 
 /**
  * A warehouse is a place where items are stored.
@@ -45,7 +46,7 @@ trait Warehouse:
 end Warehouse
 
 object Warehouse:
-  def apply(): Warehouse = ???
+  def apply(): Warehouse = WarehouseImpl()
 
 @main def mainWarehouse(): Unit =
   val warehouse = Warehouse()
@@ -75,3 +76,19 @@ object Warehouse:
  * - Implement remove using filter
  * - Refactor the code of Item accepting a variable number of tags (hint: use _*)
 */
+
+private case class ItemImpl(override val code:Int, override val name: String, override val tags: Sequence[String]) extends Item
+
+private class WarehouseImpl() extends Warehouse:
+  private var storedItems: Sequence[Item] = Sequence.empty
+
+  override def store(item: Item): Unit =
+    storedItems = Sequence.Cons(item, storedItems)
+
+  override def contains(itemCode: Int): Boolean = storedItems.map(i => i.code).contains(itemCode)
+  override def retrieve(code: Int): Optional[Item] = storedItems.find(i => i.code == code)
+  override def remove(item: Item): Unit =
+    storedItems = storedItems.filter(i => i != item)
+  override def searchItems(tag: String): Sequence[Item] = storedItems.filter(i => i.tags.contains(tag))
+
+
